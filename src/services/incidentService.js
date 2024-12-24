@@ -16,8 +16,41 @@ const createIncident = async (incidentData) => {
 };
 
 // Serivce to Fetch all incident
-const getAllIncident = async () => {
-  return await Incident.find();
+const getAllIncident = async (query) => {
+  return await Incident.find(query);
+};
+// Serivce to Fetch all incident counts
+const getAllIncidentCounts = async () => {
+  const deviceCounts = await Device.find();
+  const counts = await Incident.aggregate([
+    {
+      $facet: {
+        allIncidents: [{ $count: "total" }], // Count all incidents
+        activeIncidents: [
+          { $match: { status: { $ne: "resolved" } } }, // Filter for active incidents
+          { $count: "total" },
+        ],
+        resolvedIncidents: [
+          { $match: { status: "resolved" } }, // Filter for resolved incidents
+          { $count: "total" },
+        ],
+      },
+    },
+    {
+      $project: {
+        allIncidents: { $arrayElemAt: ["$allIncidents.total", 0] },
+        activeIncidents: { $arrayElemAt: ["$activeIncidents.total", 0] },
+        resolvedIncidents: { $arrayElemAt: ["$resolvedIncidents.total", 0] },
+      },
+    },
+  ]);
+
+  return {
+    allIncidents: counts[0].allIncidents || 0,
+    activeIncidents: counts[0].activeIncidents || 0,
+    resolvedIncidents: counts[0].resolvedIncidents || 0,
+    usersCount: deviceCounts.length || 0,
+  };
 };
 
 // Serivce to update an incident
@@ -106,4 +139,5 @@ module.exports = {
   saveOrUpdateDevice,
   findNearbyIncidents,
   sendPushNotifications,
+  getAllIncidentCounts,
 };

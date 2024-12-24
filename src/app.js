@@ -6,6 +6,7 @@ const path = require("path");
 const notificationRoutes = require("./routes/notificationRoutes");
 const incidentRoutes = require("./routes/incidentRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const authRoutes = require("./routes/authRoutes");
 const errorHandler = require("./utils/errorHandler");
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/public", express.static(path.join(__dirname, "../public")));
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/category", categoryRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 

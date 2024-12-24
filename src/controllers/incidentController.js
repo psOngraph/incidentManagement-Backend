@@ -66,7 +66,21 @@ const incidentController = {
   },
   getAll: async (req, res) => {
     try {
-      const incidents = await getAllIncident();
+      const { search } = req.query; // Extract search query parameter
+
+      let query = {};
+      if (search && search.trim()) {
+        const searchTerm = search.trim();
+        query = {
+          $or: [
+            { category: { $regex: `.*${searchTerm}.*`, $options: "i" } },
+            { type: { $regex: `.*${searchTerm}.*`, $options: "i" } },
+            { address: { $regex: `.*${searchTerm}.*`, $options: "i" } },
+            { vehicleNumber: { $regex: `.*${searchTerm}.*`, $options: "i" } },
+          ],
+        };
+      }
+      const incidents = await getAllIncident(query);
       res.status(200).json(incidents);
     } catch (error) {
       console.error(error);

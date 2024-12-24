@@ -6,28 +6,20 @@ const {
   saveOrUpdateDevice,
   findNearbyIncidents,
   sendPushNotifications,
+  getAllIncidentCounts,
 } = require("../services/incidentService.js");
 
 module.exports = (socket, io) => {
-  // Debug log to confirm handler is loaded
   console.log("Incident handler initialized for socket:", socket.id);
   // Save Incident
   socket.on("saveIncident", async (data) => {
     try {
-      //   const incident = new Incident(data);
       const savedIncident = await createIncident(data);
-
-      // Add debug log before emitting
-      console.log("Emitting incidentSaved event");
-
       io.emit("incidentSaved", {
         status: "success",
         message: "Incident saved successfully",
         incident: savedIncident,
       });
-
-      // Add debug log after emitting
-      console.log("incidentSaved event emitted");
     } catch (error) {
       console.error("Error in saveIncident:", error);
       socket.emit("error", { message: "Failed to save incident", error });
@@ -38,9 +30,7 @@ module.exports = (socket, io) => {
   socket.on("fetchAllIncidents", async () => {
     try {
       const incidents = await getAllIncident();
-      console.log("all Incidnet going to emit");
       socket.emit("allIncidents", incidents);
-      console.log("all Incidnet event emitted");
     } catch (error) {
       socket.emit("error", { message: "Failed to fetch incidents", error });
     }
@@ -53,7 +43,7 @@ module.exports = (socket, io) => {
       if (!updatedIncident) {
         socket.emit("error", { message: "Incident not found" });
       } else {
-        io.emit("incidentUpdated", {
+        socket.emit("incidentUpdated", {
           status: "success",
           message: "Incident updated successfully",
           incident: updatedIncident,
@@ -119,6 +109,15 @@ module.exports = (socket, io) => {
     }
   });
 
+  // Fetch All Incidents counts
+  socket.on("fetchAllCounts", async () => {
+    try {
+      const counts = await getAllIncidentCounts();
+      socket.emit("allCounts", counts);
+    } catch (error) {
+      socket.emit("error", { message: "Failed to fetch incidents", error });
+    }
+  });
   // catch-all event listener in this handler
   //   socket.onAny((eventName, ...args) => {
   //     console.log(
